@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Allocation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .amount-display {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .header-subtitle {
+            color: #999;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .section {
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .number-of-payments {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .number-of-payments label {
+            flex: 1;
+            font-weight: 600;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .number-of-payments input {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            text-align: center;
+            width: 70px;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .number-of-payments input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .payment-sublabel {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+            text-align: center;
+            display: block;
+        }
+
+        .allocations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .allocation-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .allocation-item.added {
+            background: linear-gradient(135deg, #e8eaf6 0%, #f3e5f5 100%);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .allocation-label {
+            flex: 1;
+            font-weight: 600;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .allocation-input {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            text-align: right;
+            width: 90px;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .allocation-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .currency-prefix {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .remove-btn {
+            background: #ffebee;
+            border: none;
+            color: #c62828;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .remove-btn:hover {
+            background: #ef5350;
+            color: white;
+        }
+
+        .add-allocation-section {
+            display: flex;
+            gap: 8px;
+        }
+
+        .allocation-dropdown {
+            flex: 1;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .allocation-dropdown:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .add-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .summary {
+            background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .summary-row.success {
+            color: #16a34a;
+        }
+
+        .summary-row.warning {
+            color: #dc2626;
+        }
+
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 24px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.success {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #16a34a;
+        }
+
+        .status-message.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid #fbbf24;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-ok {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-ok:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-ok:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="amount-display" id="amountDisplay">$10,000</div>
+            <div class="header-subtitle">Allocate your payment</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Step 1: Number of Payments</div>
+            <div class="number-of-payments">
+                <label for="paymentCount">Payments @ $2,500</label>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <input type="number" id="paymentCount" placeholder="0" min="0" value="0">
+                    <span class="payment-sublabel">payments</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Step 2: Add Other Allocations</div>
+            <div class="add-allocation-section">
+                <select id="allocationDropdown" class="allocation-dropdown">
+                    <option value="">Select an allocation...</option>
+                    <option value="principal">Principal</option>
+                    <option value="payoff">Payoff</option>
+                    <option value="lateFees">Late Fees</option>
+                    <option value="serviceFees">Service Fee</option>
+                    <option value="escrow">Escrow</option>
+                </select>
+                <button class="add-btn" id="addBtn">ADD</button>
+            </div>
+        </div>
+
+        <div class="section" id="allocationsSection">
+            <div class="allocations-list" id="allocationsList">
+                <div class="empty-state">No additional allocations added yet</div>
+            </div>
+        </div>
+
+        <div class="summary">
+            <div class="summary-row">
+                <span>Allocated</span>
+                <span id="totalAllocated">$0.00</span>
+            </div>
+            <div class="summary-row" id="remainingRow">
+                <span>Remaining</span>
+                <span id="remaining">$10,000.00</span>
+            </div>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <div class="button-group">
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-ok" id="okButton" disabled>OK</button>
+        </div>
+    </div>
+
+    <script>
+        var TOTAL = 10000;
+        var data = {
+            nextPayment: 0
+        };
+        var addedAllocations = [];
+
+        var paymentCountInput = document.getElementById('paymentCount');
+        var allocationDropdown = document.getElementById('allocationDropdown');
+        var addBtn = document.getElementById('addBtn');
+        var allocationsList = document.getElementById('allocationsList');
+        var statusMsg = document.getElementById('statusMessage');
+        var okBtn = document.getElementById('okButton');
+
+        var allocationLabels = {
+            principal: 'Principal',
+            payoff: 'Payoff',
+            lateFees: 'Late Fees',
+            serviceFees: 'Service Fee',
+            escrow: 'Escrow'
+        };
+
+        function addCommas(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function removeAllocation(key) {
+            addedAllocations = addedAllocations.filter(function(item) {
+                return item !== key;
+            });
+            delete data[key];
+            allocationDropdown.value = '';
+            renderAllocations();
+            refresh();
+        }
+
+        function renderAllocations() {
+            if (addedAllocations.length === 0) {
+                allocationsList.innerHTML = '<div class="empty-state">No additional allocations added yet</div>';
+                return;
+            }
+
+            allocationsList.innerHTML = '';
+            var i;
+            for (i = 0; i < addedAllocations.length; i++) {
+                var key = addedAllocations[i];
+                var item = document.createElement('div');
+                item.className = 'allocation-item added';
+                item.innerHTML = '<label class="allocation-label">' + allocationLabels[key] + '</label><div style="display: flex; align-items: center; gap: 8px;"><span class="currency-prefix">$</span><input type="number" class="allocation-input" data-key="' + key + '" placeholder="0.00" value="' + (data[key] || 0) + '"></div><button class="remove-btn" data-key="' + key + '">×</button>';
+                allocationsList.appendChild(item);
+            }
+
+            var inputs = allocationsList.querySelectorAll('input[data-key]');
+            var j;
+            for (j = 0; j < inputs.length; j++) {
+                inputs[j].addEventListener('input', function() {
+                    var key = this.getAttribute('data-key');
+                    data[key] = parseFloat(this.value) || 0;
+                    refresh();
+                });
+            }
+
+            var removeButtons = allocationsList.querySelectorAll('.remove-btn');
+            var k;
+            for (k = 0; k < removeButtons.length; k++) {
+                removeButtons[k].addEventListener('click', function() {
+                    var key = this.getAttribute('data-key');
+                    removeAllocation(key);
+                });
+            }
+        }
+
+        function refresh() {
+            var total = 0;
+            var key;
+            for (key in data) {
+                total = total + data[key];
+            }
+
+            var left = TOTAL - total;
+            var balanced = Math.abs(left) < 0.01;
+
+            document.getElementById('totalAllocated').textContent = '$' + addCommas(total.toFixed(2));
+            document.getElementById('remaining').textContent = '$' + addCommas(left.toFixed(2));
+
+            var row = document.getElementById('remainingRow');
+            row.classList.remove('success');
+            row.classList.remove('warning');
+            if (balanced) {
+                row.classList.add('success');
+            } else {
+                row.classList.add('warning');
+            }
+
+            if (!balanced) {
+                statusMsg.className = 'status-message warning show';
+                if (left > 0) {
+                    statusMsg.innerHTML = '$' + addCommas(left.toFixed(2)) + ' remaining to allocate';
+                } else {
+                    statusMsg.innerHTML = '$' + addCommas(Math.abs(left).toFixed(2)) + ' over budget';
+                }
+            } else {
+                statusMsg.className = 'status-message success show';
+                statusMsg.innerHTML = 'Perfect! All $10,000 allocated.';
+            }
+
+            okBtn.disabled = !balanced;
+        }
+
+        paymentCountInput.addEventListener('input', function() {
+            var count = parseInt(this.value) || 0;
+            data['nextPayment'] = count * 2500;
+            refresh();
+        });
+
+        addBtn.addEventListener('click', function() {
+            var selectedValue = allocationDropdown.value;
+            if (!selectedValue) {
+                return;
+            }
+            if (addedAllocations.indexOf(selectedValue) !== -1) {
+                return;
+            }
+            addedAllocations.push(selectedValue);
+            data[selectedValue] = 0;
+            renderAllocations();
+            allocationDropdown.value = '';
+        });
+
+        allocationDropdown.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addBtn.click();
+            }
+        });
+
+        refresh();
+    </script>
+</body>
+</html>
